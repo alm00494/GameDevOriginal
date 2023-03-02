@@ -33,12 +33,13 @@ public class Game extends GameCore
     float	moveSpeed = 0.05f;
 
     // Game state flags
-    boolean flap = false;
+    boolean jump = false;
     boolean moveRight = false;
+    boolean moveLeft = false;
     boolean debug = true;
 
     // Game resources
-    Animation landing;
+    Animation standing, running, jumping, death, attack;
 
     Sprite	player = null;
     ArrayList<Sprite> clouds = new ArrayList<Sprite>();
@@ -84,11 +85,20 @@ public class Game extends GameCore
         // Create a set of background sprites that we can
         // rearrange to give the illusion of motion
 
-        landing = new Animation();
-        landing.loadAnimationFromSheet("images/landbird.png", 4, 1, 60);
+        standing = new Animation();
+        standing.loadAnimationFromSheet("images/Biker_idle.png", 4, 1, 60);
+
+        running = new Animation();
+        running.loadAnimationFromSheet("images/Biker_run.png", 6, 1, 60);
+
+        jumping = new Animation();
+        jumping.loadAnimationFromSheet("images/Biker_jump.png", 4, 1, 60);
+
+        death = new Animation();
+        death.loadAnimationFromSheet("images/Biker_death.png", 6, 1, 60);
 
         // Initialise the player with an animation
-        player = new Sprite(landing);
+        player = new Sprite(standing);
 
         // Load a single cloud animation
         Animation ca = new Animation();
@@ -197,15 +207,22 @@ public class Game extends GameCore
 
         player.setAnimationSpeed(1.0f);
 
-        if (flap)
+        if (jump)
         {
             player.setAnimationSpeed(1.8f);
             player.setVelocityY(fly);
+            player.setAnimation(jumping);
         }
 
         if (moveRight)
         {
             player.setVelocityX(moveSpeed);
+            player.setAnimation(running);
+        }
+        else if (moveLeft)
+        {
+            player.setVelocityX(-moveSpeed);
+            player.setAnimation(running);
         }
         else
         {
@@ -266,8 +283,9 @@ public class Game extends GameCore
 
         switch (key)
         {
-            case KeyEvent.VK_UP     : flap = true; break;
+            case KeyEvent.VK_UP     : jump = true; break;
             case KeyEvent.VK_RIGHT  : moveRight = true; break;
+            case KeyEvent.VK_LEFT   : moveLeft = true; break;
             case KeyEvent.VK_S 		: Sound s = new Sound("sounds/caw.wav");
                 s.start();
                 break;
@@ -276,6 +294,20 @@ public class Game extends GameCore
             default :  break;
         }
 
+    }
+
+    public void keyReleased(KeyEvent e) {
+
+        int key = e.getKeyCode();
+
+        switch (key)
+        {
+            case KeyEvent.VK_ESCAPE : stop(); break;
+            case KeyEvent.VK_UP     : jump = false; break;
+            case KeyEvent.VK_RIGHT  : moveRight = false; player.setAnimation(standing); break;
+            case KeyEvent.VK_LEFT   : moveLeft = false; player.setAnimation(standing); break;
+            default :  break;
+        }
     }
 
     /** Use the sample code in the lecture notes to properly detect
@@ -319,31 +351,11 @@ public class Game extends GameCore
         // What tile character is at the top left of the sprite s?
         char tlTile = tmap.getTileChar(xtile, ytile);
 
-
-        if (tlTile != '.') // If it's not a dot (empty space), handle it
-        {
-            // Here we just stop the sprite.
-            s.stop();
-            // Here we move the sprite to a position that is not colliding
-            s.setY(ytile * tileHeight + tileHeight);
-        }
-
         // We need to consider the other corners of the sprite
         // The above looked at the top left position, let's look at the top right.
         xtile = (int)((sx + s.getWidth()) / tileWidth);
         ytile = (int)(sy / tileHeight);
         char trTile = tmap.getTileChar(xtile, ytile);
-
-        // If it's not empty space
-        if (trTile != '.')
-        {
-            // Here we just stop the sprite.
-            s.stop();
-            // Here we move the sprite to a position that is not colliding
-            s.setX(xtile * tileWidth - s.getWidth());
-
-        }
-
 
         // We need to consider the other corners of the sprite
         // The above looked at the top left position, let's look at the bottom left.
@@ -351,38 +363,49 @@ public class Game extends GameCore
         ytile = (int)((sy + s.getHeight())/ tileHeight);
         char blTile = tmap.getTileChar(xtile, ytile);
 
-        // If it's not empty space
-        if (blTile != '.')
-        {
-            // Let's make the sprite bounce
-            s.setVelocityY(-s.getVelocityY()); // Reverse velocity
-        }
-
         //We need to consider the other corners of the sprite
         //The above looked at the top left position, let's look at the bottom right.
         xtile = (int)((sx + s.getWidth()) / tileWidth);
         ytile = (int)((sy + s.getHeight())/ tileHeight);
         char brTile = tmap.getTileChar(xtile, ytile);
 
-        //If it's not empty space
-        if (brTile != '.')
+        // create an array of the tiles
+        char[] tiles = {tlTile, trTile, blTile, brTile};
+
+        // loop through the tiles
+        for (char tile : tiles)
         {
-            //Let's make the sprite bounce
-            s.setVelocityY(-s.getVelocityY()); //Reverse velocity
+            // if the tile is ground
+            if (tile == 'g')
+            {
+                //Let's make the sprite stop moving
+                s.setVelocityY(0);
+
+                // Reset the sprite's position to a non-colliding position
+                s.setY((int)sy);
+
+                // We've found a collision, so we can stop looking
+                break;
+            }
+
+            // if the tile is not empty space or ground
+            if (tile != '.' && tile != 'g')
+            {
+                //Let's make the sprite stop moving
+                s.setVelocityX(0);
+                s.setVelocityY(0);
+
+                // Reset the sprite's position to a non-colliding position
+                s.setX((int)sx);
+                s.setY((int)sy);
+
+                // We've found a collision, so we can stop looking
+                break;
+            }
         }
+
     }
 
 
-    public void keyReleased(KeyEvent e) {
 
-        int key = e.getKeyCode();
-
-        switch (key)
-        {
-            case KeyEvent.VK_ESCAPE : stop(); break;
-            case KeyEvent.VK_UP     : flap = false; break;
-            case KeyEvent.VK_RIGHT  : moveRight = false; break;
-            default :  break;
-        }
-    }
 }
