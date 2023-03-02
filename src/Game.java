@@ -140,8 +140,11 @@ public class Game extends GameCore
         int xo = -(int)player.getX() + 200;
         int yo = 0; //-(int)player.getY() + 200;
 
-        g.setColor(Color.white);
-        g.fillRect(0, 0, getWidth(), getHeight());
+        //g.setColor(Color.white);
+        //g.fillRect(0, 0, getWidth(), getHeight());
+
+        //draw the background using Background - Large.png
+        g.drawImage(loadImage("images/Background - Large.png"), -200, -200, null);
 
         // Apply offsets to sprites then draw them
         for (Sprite s: clouds)
@@ -299,38 +302,73 @@ public class Game extends GameCore
         float sx = s.getX();
         float sy = s.getY();
 
+        // Take a note of the sprite's current velocity
+        float vx = s.getVelocityX();
+        float vy = s.getVelocityY();
+
         // Find out how wide and how tall a tile is
         float tileWidth = tmap.getTileWidth();
         float tileHeight = tmap.getTileHeight();
 
         // Divide the sprite’s x coordinate by the width of a tile, to get
-        // the number of tiles across the x axis that the sprite is positioned at
+        // the number of tiles across the x-axis that the sprite is positioned at
         int	xtile = (int)(sx / tileWidth);
         // The same applies to the y coordinate
         int ytile = (int)(sy / tileHeight);
 
         // What tile character is at the top left of the sprite s?
-        char ch = tmap.getTileChar(xtile, ytile);
+        char tlTile = tmap.getTileChar(xtile, ytile);
 
 
-        if (ch != '.') // If it's not a dot (empty space), handle it
+        if (tlTile != '.') // If it's not a dot (empty space), handle it
         {
             // Here we just stop the sprite.
             s.stop();
-            // You should move the sprite to a position that is not colliding
+            // Here we move the sprite to a position that is not colliding
+            s.setY(ytile * tileHeight + tileHeight);
         }
+
+        // We need to consider the other corners of the sprite
+        // The above looked at the top left position, let's look at the top right.
+        xtile = (int)((sx + s.getWidth()) / tileWidth);
+        ytile = (int)(sy / tileHeight);
+        char trTile = tmap.getTileChar(xtile, ytile);
+
+        // If it's not empty space
+        if (trTile != '.')
+        {
+            // Here we just stop the sprite.
+            s.stop();
+            // Here we move the sprite to a position that is not colliding
+            s.setX(xtile * tileWidth - s.getWidth());
+
+        }
+
 
         // We need to consider the other corners of the sprite
         // The above looked at the top left position, let's look at the bottom left.
         xtile = (int)(sx / tileWidth);
         ytile = (int)((sy + s.getHeight())/ tileHeight);
-        ch = tmap.getTileChar(xtile, ytile);
+        char blTile = tmap.getTileChar(xtile, ytile);
 
         // If it's not empty space
-        if (ch != '.')
+        if (blTile != '.')
         {
             // Let's make the sprite bounce
             s.setVelocityY(-s.getVelocityY()); // Reverse velocity
+        }
+
+        //We need to consider the other corners of the sprite
+        //The above looked at the top left position, let's look at the bottom right.
+        xtile = (int)((sx + s.getWidth()) / tileWidth);
+        ytile = (int)((sy + s.getHeight())/ tileHeight);
+        char brTile = tmap.getTileChar(xtile, ytile);
+
+        //If it's not empty space
+        if (brTile != '.')
+        {
+            //Let's make the sprite bounce
+            s.setVelocityY(-s.getVelocityY()); //Reverse velocity
         }
     }
 
