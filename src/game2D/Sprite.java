@@ -3,6 +3,7 @@ package game2D;
 import java.awt.Image;
 import java.awt.*;
 import java.awt.geom.*;
+import java.awt.image.BufferedImage;
 
 /**
  * This class provides the functionality for a moving animated image or Sprite.
@@ -12,6 +13,10 @@ import java.awt.geom.*;
  */
 public class Sprite {
 
+    public static final int TOP = 0;
+    public static final int BOTTOM = 1;
+    public static final int LEFT = 2;
+    public static final int RIGHT = 3;
     // The current Animation to use for this sprite
     private Animation anim;
 
@@ -37,6 +42,9 @@ public class Sprite {
 
     // If render is 'true', the sprite will be drawn when requested
     private boolean render;
+
+    // Whether or not the sprite is flipped horizontally
+    private boolean flipped;
 
     // The draw offset associated with this sprite. Used to draw it
     // relative to specific on screen position (usually the player)
@@ -190,6 +198,16 @@ public class Sprite {
     {
         setX(x);
         setY(y);
+    }
+
+    public void setFlipped(boolean f)
+    {
+        flipped = f;
+    }
+
+    public boolean isFlipped()
+    {
+        return flipped;
     }
 
     public void shiftX(float shift)
@@ -382,7 +400,7 @@ public class Sprite {
         if (!render) return;
 
         Image img = getImage();
-        g.drawRect((int)x+xoff,(int)y+yoff,img.getWidth(null),img.getHeight(null));
+        g.drawRect((int)x+xoff,(int)y+yoff,((img.getWidth(null)/2)+10),img.getHeight(null));
     }
 
     /**
@@ -425,6 +443,30 @@ public class Sprite {
         g.drawImage(getImage(),transform,null);
     }
 
+    public void drawFlipped(Graphics2D g, int x, int y)
+    {
+        if (!render) {
+            return;
+        }
+
+        BufferedImage image = (BufferedImage) anim.getImage(); // Get the player object's image
+
+        // Create a new BufferedImage for the flipped image
+        BufferedImage flippedImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+
+        // Flip the original image by drawing it onto the flipped image in reverse order
+        Graphics2D flippedGraphics = flippedImage.createGraphics();
+        flippedGraphics.drawImage(image, image.getWidth(), 0, -image.getWidth(), image.getHeight(), null);
+        flippedGraphics.dispose();
+
+        // Draw the flipped image if necessary, or the original image if not
+        if (flipped) {
+            g.drawImage(flippedImage, x + image.getWidth(), y, null);
+        } else {
+            g.drawImage(image, x, y, null);
+        }
+    }
+
 
     /**
      Hide the sprite.
@@ -453,4 +495,7 @@ public class Sprite {
     }
 
 
+    public Rectangle getBounds() {
+        return new Rectangle((int)x+xoff,(int)y+yoff,getWidth(),getHeight());
+    }
 }

@@ -41,10 +41,10 @@ public class TileMap
 {
 
     private Tile [][] tmap;		// The tile map grid, initially null
-    private int mapWidth=0;		// The maps width in tiles
-    private int mapHeight=0;	// The maps height in tiles
-    private int tileWidth=0;	// The width of a tile in pixels
-    private int tileHeight=0;	// The height of a tile in pixels
+    private int mapWidth=84;	// The maps width in tiles
+    private int mapHeight=12;	// The maps height in tiles
+    private int tileWidth=58;	// The width of a tile in pixels
+    private int tileHeight=58;	// The height of a tile in pixels
 
     // imagemap contains a set of character to image mappings for
     // quick loop up of the image associated with a given character.
@@ -370,6 +370,29 @@ public class TileMap
 
         g.setColor(colour);
         g.drawRect(xoff, yoff, getPixelWidth(), getPixelHeight());
+    }
+
+    public int getTileIndex(int x, int y) {
+        // Compute the tile coordinates based on the pixel coordinates
+        int tileX = x / tileWidth;
+        int tileY = y / tileHeight;
+
+        // Compute the index of the tile in the tileset
+        int index = tileY * mapWidth + tileX;
+
+        return index;
+    }
+
+
+    public char getTileChar(int tileIndex) {
+        // Compute the tile coordinates based on the tile index
+        int tileX = tileIndex % mapWidth;
+        int tileY = tileIndex / mapWidth;
+
+        // Get the tile character
+        char tileChar = getTileChar(tileX, tileY);
+
+        return tileChar;
     }
 
 }
